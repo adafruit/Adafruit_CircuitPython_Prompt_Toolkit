@@ -1,4 +1,3 @@
-# SPDX-FileCopyrightText: 2017 Scott Shawcroft, written for Adafruit Industries
 # SPDX-FileCopyrightText: Copyright (c) 2023 Scott Shawcroft for Adafruit Industries
 #
 # SPDX-License-Identifier: MIT
@@ -8,35 +7,27 @@
 
 Slimmed down implementation of prompt_toolkit for CircuitPython
 
-
-* Author(s): Scott Shawcroft
-
-Implementation Notes
---------------------
-
 """
 
-# imports
+from .history import InMemoryHistory
 
 __version__ = "0.0.0+auto.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Prompt_Toolkit.git"
 
-from .history import InMemoryHistory
 
-
-def _prompt(message="", *, input=None, output=None, history=None):
+def _prompt(message="", *, input_=None, output=None, history=None):
+    # pylint: disable=too-many-nested-blocks,too-many-branches,too-many-statements
     output.write(message.encode("utf-8"))
     commands = []
     control_command = []
     offset = 0
     selected_history_entry = None
     while not commands or commands[-1] != ord("\r"):
-        c = input.read(1)
-        print(c, c[0])
+        char = input_.read(1)
+        print(char, char[0])
 
         if control_command:
-            control_command.append(c[0])
-            print("control", control_command)
+            control_command.append(char[0])
             # Check for unsupported codes. If one is found, add the second character to the
             # plain command and ignore the escape.
             if len(control_command) == 2 and not control_command[-1] == ord(b"["):
@@ -47,8 +38,8 @@ def _prompt(message="", *, input=None, output=None, history=None):
                 ord("0") <= control_command[-1] <= ord("9")
             ):
                 echo = False
-                cc = control_command[-1]
-                if cc == ord("A") or cc == ord("B"):
+                control_char = control_command[-1]
+                if control_char == ord("A") or control_char == ord("B"):
                     if history is None:
                         control_command = []
                         output.write(b"\a")
@@ -58,7 +49,7 @@ def _prompt(message="", *, input=None, output=None, history=None):
                         control_command = []
                         output.write(b"\a")
                         continue
-                    if cc == ord("A"):
+                    if control_char == ord("A"):
                         # up
                         if selected_history_entry is None:
                             selected_history_entry = 1
@@ -69,49 +60,50 @@ def _prompt(message="", *, input=None, output=None, history=None):
                                 selected_history_entry = len(strings)
                     else:
                         # down
-                        print("down")
                         if selected_history_entry is None:
                             output.write(b"\a")
                         else:
                             selected_history_entry -= 1
                             if selected_history_entry < 1:
                                 selected_history_entry = None
-                    # Move the cursor left as much as our current command
-                    for _ in commands:
-                        output.write(b"\b")
-                    # Set and print the new command
-                    commands = list(strings[-selected_history_entry].encode("utf-8"))
-                    output.write(bytes(commands))
-                    # Clear the rest of the line
-                    output.write(b"\x1b[K")
-                elif cc == ord("C"):
+                    if selected_history_entry is not None:
+                        # Move the cursor left as much as our current command
+                        for _ in commands:
+                            output.write(b"\b")
+                        # Set and print the new command
+                        commands = list(
+                            strings[-selected_history_entry].encode("utf-8")
+                        )
+                        output.write(bytes(commands))
+                        # Clear the rest of the line
+                        output.write(b"\x1b[K")
+                elif control_char == ord("C"):
                     echo = True
                     offset = max(0, offset - 1)
-                elif cc == ord("D"):
+                elif control_char == ord("D"):
                     echo = True
                     offset += 1
 
                 if echo:
                     b = bytes(control_command)
-                    print("echo", b)
                     output.write(b)
                 control_command = []
             continue
-        elif c == b"\x1b":
-            control_command.append(c[0])
+        if char == b"\x1b":
+            control_command.append(char[0])
             continue
-        elif offset == 0 or c == b"\r":
-            commands.append(c[0])
+        if offset == 0 or char == b"\r":
+            commands.append(char[0])
         else:
-            commands[-offset] = c[0]
+            commands[-offset] = char[0]
             offset -= 1
 
-        if c[-1] == 127:
+        if char[-1] == 127:
             commands.pop()
             commands.pop()
             output.write(b"\b\x1b[K")
         else:
-            output.write(c)
+            output.write(char)
 
         print(commands, not commands)
     output.write(b"\n")
@@ -125,11 +117,22 @@ def _prompt(message="", *, input=None, output=None, history=None):
 
 
 def prompt(message="", *, input=None, output=None):
-    return _prompt(message, input=input, output=output)
+    """Prompt the user for input over the ``input`` stream with the given
+    ``message`` output on ``output``. Handles control characters for value editing."""
+    # "input" and "output" are only on PromptSession in upstream "prompt_toolkit" but we use it for
+    # prompts without history.
+    # pylint: disable=redefined-builtin
+    return _prompt(message, input_=input, output=output)
 
 
 class PromptSession:
+    """Session for multiple prompts. Stores common arguments to `prompt()` and
+    history of commands for user selection."""
+
     def __init__(self, message="", *, input=None, output=None, history=None):
+        # "input" and "output" are names used in upstream "prompt_toolkit" so we
+        # use them too.
+        # pylint: disable=redefined-builtin
         self.message = message
         self._input = input
         self._output = output
@@ -137,10 +140,12 @@ class PromptSession:
         self.history = history if history else InMemoryHistory()
 
     def prompt(self, message=None) -> str:
+        """Prompt the user for input over the session's ``input`` with the given
+        message or the default message."""
         message = message if message else self.message
 
         decoded = _prompt(
-            message, input=self._input, output=self._output, history=self.history
+            message, input_=self._input, output=self._output, history=self.history
         )
 
         return decoded

@@ -5,9 +5,10 @@
 
 # This example works over the second CDC and supports history.
 
+import usb_cdc
+
 # Rename import to make the rest of the code compatible with CPython's prompt_toolkit library.
 import adafruit_prompt_toolkit as prompt_toolkit
-import usb_cdc
 
 # If the second CDC is available, then use it instead.
 serial = usb_cdc.console
