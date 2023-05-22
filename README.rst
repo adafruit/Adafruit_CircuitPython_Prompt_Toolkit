@@ -21,7 +21,7 @@ Introduction
     :target: https://github.com/psf/black
     :alt: Code Style: Black
 
-Slimmed down implementation of prompt_toolkit for CircuitPython
+Slimmed down implementation of `prompt_toolkit <https://github.com/prompt-toolkit/python-prompt-toolkit>`_ for CircuitPython
 
 
 Dependencies
@@ -36,39 +36,13 @@ This is easily achieved by downloading
 or individual libraries can be installed using
 `circup <https://github.com/adafruit/circup>`_.
 
-.. todo:: Describe the Adafruit product this library works with. For PCBs, you can also add the
-image from the assets folder in the PCB's GitHub repo.
-
-`Purchase one from the Adafruit shop <http://www.adafruit.com/products/>`_
 Installing from PyPI
 =====================
-.. note:: This library is not available on PyPI yet. Install documentation is included
-   as a standard element. Stay tuned for PyPI availability!
 
-.. todo:: Remove the above note if PyPI version is/will be available at time of release.
-
-On supported GNU/Linux systems like the Raspberry Pi, you can install the driver locally `from
-PyPI <https://pypi.org/project/adafruit-circuitpython-prompt-toolkit/>`_.
-To install for current user:
-
-.. code-block:: shell
-
-    pip3 install adafruit-circuitpython-prompt-toolkit
-
-To install system-wide (this may be required in some cases):
-
-.. code-block:: shell
-
-    sudo pip3 install adafruit-circuitpython-prompt-toolkit
-
-To install in a virtual environment in your current project:
-
-.. code-block:: shell
-
-    mkdir project-name && cd project-name
-    python3 -m venv .venv
-    source .env/bin/activate
-    pip3 install adafruit-circuitpython-prompt-toolkit
+This library is available in PyPI for CircuitPython tools that need it. If you
+actually want to use it on CPython (not CircuitPython), then we recommend the
+full `prompt_toolkit <https://github.com/prompt-toolkit/python-prompt-toolkit>`_
+library that is also on PyPI.
 
 Installing to a Connected CircuitPython Device with Circup
 ==========================================================
@@ -96,8 +70,25 @@ Or the following command to update an existing version:
 Usage Example
 =============
 
-.. todo:: Add a quick, simple example. It and other examples should live in the
-examples folder and be included in docs/examples.rst.
+.. code-block:: python
+
+    # This example works over the second CDC and supports history.
+
+    import usb_cdc
+
+    # Rename import to make the rest of the code compatible with CPython's prompt_toolkit library.
+    import adafruit_prompt_toolkit as prompt_toolkit
+
+    # If the second CDC is available, then use it instead.
+    serial = usb_cdc.console
+    if usb_cdc.data:
+        serial = usb_cdc.data
+
+    session = prompt_toolkit.PromptSession(input=serial, output=serial)
+
+    while True:
+        response = prompt_toolkit.prompt("$ ")
+        print("->", response, file=serial)
 
 Documentation
 =============
