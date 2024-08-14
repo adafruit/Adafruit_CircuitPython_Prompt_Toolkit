@@ -87,7 +87,7 @@ Usage Example
     session = prompt_toolkit.PromptSession(input=serial, output=serial)
 
     while True:
-        response = prompt_toolkit.prompt("$ ")
+        response = session.prompt("$ ")
         print("->", response, file=serial)
 
 Documentation
