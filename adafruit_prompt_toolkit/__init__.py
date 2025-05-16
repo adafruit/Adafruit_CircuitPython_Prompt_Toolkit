@@ -16,7 +16,6 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_Prompt_Toolkit.gi
 
 
 def _prompt(message="", *, input_=None, output=None, history=None):
-    # pylint: disable=too-many-nested-blocks,too-many-branches,too-many-statements
     output.write(message.encode("utf-8"))
     commands = []
     control_command = []
@@ -34,9 +33,7 @@ def _prompt(message="", *, input_=None, output=None, history=None):
                 commands.append(control_command[-1])
                 control_command = []
             # Command is done when it doesn't end with a number
-            if len(control_command) > 2 and not (
-                ord("0") <= control_command[-1] <= ord("9")
-            ):
+            if len(control_command) > 2 and not (ord("0") <= control_command[-1] <= ord("9")):
                 echo = False
                 control_char = control_command[-1]
                 if control_char == ord("A") or control_char == ord("B"):
@@ -58,22 +55,18 @@ def _prompt(message="", *, input_=None, output=None, history=None):
                             if selected_history_entry > len(strings):
                                 output.write(b"\a")
                                 selected_history_entry = len(strings)
+                    elif selected_history_entry is None:
+                        output.write(b"\a")
                     else:
-                        # down
-                        if selected_history_entry is None:
-                            output.write(b"\a")
-                        else:
-                            selected_history_entry -= 1
-                            if selected_history_entry < 1:
-                                selected_history_entry = None
+                        selected_history_entry -= 1
+                        if selected_history_entry < 1:
+                            selected_history_entry = None
                     if selected_history_entry is not None:
                         # Move the cursor left as much as our current command
                         for _ in commands:
                             output.write(b"\b")
                         # Set and print the new command
-                        commands = list(
-                            strings[-selected_history_entry].encode("utf-8")
-                        )
+                        commands = list(strings[-selected_history_entry].encode("utf-8"))
                         output.write(bytes(commands))
                         # Clear the rest of the line
                         output.write(b"\x1b[K")
@@ -121,7 +114,6 @@ def prompt(message="", *, input=None, output=None):
     ``message`` output on ``output``. Handles control characters for value editing."""
     # "input" and "output" are only on PromptSession in upstream "prompt_toolkit" but we use it for
     # prompts without history.
-    # pylint: disable=redefined-builtin
     return _prompt(message, input_=input, output=output)
 
 
@@ -132,7 +124,6 @@ class PromptSession:
     def __init__(self, message="", *, input=None, output=None, history=None):
         # "input" and "output" are names used in upstream "prompt_toolkit" so we
         # use them too.
-        # pylint: disable=redefined-builtin
         self.message = message
         self._input = input
         self._output = output
@@ -144,8 +135,6 @@ class PromptSession:
         message or the default message."""
         message = message if message else self.message
 
-        decoded = _prompt(
-            message, input_=self._input, output=self._output, history=self.history
-        )
+        decoded = _prompt(message, input_=self._input, output=self._output, history=self.history)
 
         return decoded
