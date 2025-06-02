@@ -3,7 +3,7 @@ Introduction
 
 
 .. image:: https://readthedocs.org/projects/adafruit-circuitpython-prompt-toolkit/badge/?version=latest
-    :target: https://docs.circuitpython.org/projects/prompt_toolkit/en/latest/
+    :target: https://docs.circuitpython.org/projects/prompt-toolkit/en/latest/
     :alt: Documentation Status
 
 
